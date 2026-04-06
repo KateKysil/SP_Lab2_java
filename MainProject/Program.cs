@@ -1,6 +1,7 @@
-﻿using System.Diagnostics.Metrics;
+﻿using JavaLexer;
+using SP_Lab2_java;
+using System.Diagnostics.Metrics;
 using System.Drawing;
-using JavaLexer;
 
 class Program
 {
@@ -23,44 +24,26 @@ class Program
     }
     static void Main(string[] args)
     {
-        Console.Write("Enter path to Java file: ");
-        string filepath = Console.ReadLine();
+        IFileReader realReader = new RealFileReader();
+        CodeAnalyzer analyzer = new CodeAnalyzer(realReader);
 
-        if (!File.Exists(filepath))
-        {
-            Console.Error.WriteLine($"Cannot open file: {filepath}");
-            Environment.Exit(2);
-        }
+        string filePath = "input.java";
 
-        string input;
         try
         {
-            input = File.ReadAllText(filepath);
+            List<Token> tokens = analyzer.Analyze(filePath);
+
+            Console.WriteLine($"\nУспішно знайдено токенів: {tokens.Count}");
+            foreach (var token in tokens)
+            {
+                Console.WriteLine($"Тип: {token.Type,-15} Лексема: '{token.Lexeme}'");
+            }
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error reading file: {ex.Message}");
-            Environment.Exit(2);
-            return;
+            Console.WriteLine($"\nСталася помилка під час виконання: {ex.Message}");
         }
-
-        Lexer lexer = new Lexer(input);
-        List<Token> tokens = lexer.Tokenize();
-
-        foreach (Token t in tokens)
-        {
-            if (t.Type == TokenType.EndOfFile) break;
-            string col = ColorFor(t.Type);
-
-            if (!string.IsNullOrEmpty(col))
-            {
-                Console.Write($"{col}{t.Lexeme}{JavaLexer.Color.Reset}");
-            }
-            else
-            {
-                Console.Write(t.Lexeme);
-            }
-        }
+        Console.ReadLine();
     }
 
 }
