@@ -35,8 +35,6 @@ namespace SP_Lab2_java.Tests
         [Test]
         public void Test_Analyze_ExceptionForSecret()
         {
-            _mockReader.Setup(r => r.ReadCode(It.Is<string>(path => path.EndsWith(".secret"))))
-                       .Throws(new UnauthorizedAccessException("Доступ заборонено!"));
             Assert.Throws<UnauthorizedAccessException>(() => _analyzer.Analyze("passwords.secret"));
             _mockReader.Verify(r => r.LogStatus("Розпочато зчитування"), Times.Once);
             _mockReader.Verify(r => r.LogStatus("Зчитування завершено"), Times.Never);
@@ -51,6 +49,16 @@ namespace SP_Lab2_java.Tests
             var tokens = _analyzer.Analyze("Retry.java");
             Assert.That(tokens, Is.Not.Null);
             _mockReader.Verify(r => r.ReadCode("Retry.java"), Times.Exactly(2));
+        }
+
+        [Test]
+        public void Test_Analyze_ExceptionForBinary()
+        {
+            _mockReader.Setup(r => r.ReadCode(It.Is<string>(path => path.EndsWith(".exe") || path.EndsWith(".dll"))))
+                       .Throws(new InvalidOperationException("Неможливо прочитати бінарний файл як текст."));
+            Assert.Throws<InvalidOperationException>(() => _analyzer.Analyze("compiled_app.exe"));
+            _mockReader.Verify(r => r.LogStatus("Розпочато зчитування"), Times.Once);
+            _mockReader.Verify(r => r.LogStatus("Зчитування завершено"), Times.Never);
         }
     }
 }
